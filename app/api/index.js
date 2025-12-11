@@ -46,5 +46,29 @@ const weather = ()=>{
         setCity('')
     }
 
-    
+    const weatherReport = async(data)=>{
+        const urlcast = `http://api.openweathermap.org/data/2.5/forecast?q=${data.name}&appid=${apikey}`;
+        try{
+            const respone = await axios.get(urlcast)
+            const forecast = respone.data
+            console.log(forecast.city)
+            hourForecast(forecast)
+            dayForecast(forecast)
+
+            console.log(data)
+            document.getElementById('city').innerText = data.name + ',' + data.sys.country
+            console.log(data.name , data.sys.country)
+
+            console.log(Math.floor(data.main.temp - 273))
+            document.getElementById('temperature').innerText = data.weather[0].description
+            console.log(data.weather[0].description)
+
+            let icon1 = data.weather[0].icon
+            let iconurl = "https://openweathermap.org/img/wn/" + icon1 + ".png";
+            document.getElementById('img').src = iconurl
+        }
+        catch(err){
+            console.err("Error Fetching Weather Data:" , err)
+        }
+    }
 }
