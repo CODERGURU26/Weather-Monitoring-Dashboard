@@ -4,7 +4,7 @@ const { useState, useEffect } = require("react");
 
 const apikey = "feff206daa60b539abe8fae8f2ab7f29";
 
-const weather = () => {
+const Weather = () => {
   const router = useRouter();
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState(null);
@@ -135,10 +135,59 @@ const weather = () => {
             document.querySelector('.week').appendChild(div);
         }
     }
+
+    
+    return (
+        <div>
+            <div className="header">
+                <h1>WEATHER Monitoring Dashboard</h1>
+                <div>
+                    <input
+                        type="text"
+                        name=""
+                        id="input"
+                        placeholder="Enter city name"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                    />
+                    <button id="search" onClick={searchByCity}>
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <main>
+                <div className="weather">
+                    <h2 id="city">Delhi,IN</h2>
+                    <div className="temp-box">
+                        <p id="temperature">26 °C</p>
+                    </div>
+                    <span id="clouds">Broken Clouds</span>
+                </div>
+
+                <div className="divider"></div>
+
+                <div className="forecast">
+                    <p className="cast-header">Upcoming forecast</p>
+                    <div className="forecast-list templist">
+                        {/* Hourly forecast will be rendered here */}
+                    </div>
+                </div>
+            </main>
+
+            <div className="divider-2"></div>
+
+            <div className="forecast-2">
+                <p className="cast-header"> Next 4 days forecast</p>
+                <div className="forecast-list-2 weekF">
+                    {/* Daily forecast will be rendered here */}
+                </div>
+            </div>
+        </div>
+    );
 };
 
-return (
-    <div>
-        
-    </div>
-)
+export default Weather;
+
+
+
