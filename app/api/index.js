@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const { useRouter } = require("next/router");
 const { useState, useEffect } = require("react");
 
@@ -18,4 +19,16 @@ const weather = ()=>{
             })
         }
     } , [])
+
+    const fetchWeatherData = async(url)=>{
+        try{
+            const response = await axios.get(url)
+            const data = response.data
+            console.log(data)
+            weatherReport(data)
+        }
+        catch(err){
+            console.error("Error Fetching Weather Data" , err)
+        }
+    }
 }
