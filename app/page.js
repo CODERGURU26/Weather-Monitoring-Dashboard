@@ -1,65 +1,192 @@
-import Image from "next/image";
+"use client";
+import axios from "axios";
+import { useState, useEffect } from "react";
 
-export default function Home() {
+const apikey = "feff206daa60b539abe8fae8f2ab7f29";
+
+const Weather = () => {
+  const [city, setCity] = useState("");
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apikey}`;
+        fetchWeatherData(url);
+      });
+    }
+  }, []);
+
+  const fetchWeatherData = async (url) => {
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+      weatherReport(data);
+    } catch (err) {
+      console.error("Error Fetching Weather Data", err);
+    }
+  };
+
+  const searchByCity = async () => {
+    if (!city) return;
+
+    try {
+      const urlsearch = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apikey}`;
+      const respone = await axios.get(urlsearch);
+      const data = respone.data;
+      weatherReport(data);
+    } catch (err) {
+      console.error("Error Fetching Weather Data:", err);
+    }
+
+    setCity("");
+  };
+
+  const weatherReport = async (data) => {
+    const urlcast = `https://api.openweathermap.org/data/2.5/forecast?q=${data.name}&appid=${apikey}`;
+
+    try {
+      const respone = await axios.get(urlcast);
+      const forecast = respone.data;
+
+      hourForecast(forecast);
+      dayForecast(forecast);
+
+      document.getElementById("city").innerText =
+        data.name + ", " + data.sys.country;
+
+      document.getElementById("temperature").innerText =
+        Math.floor(data.main.temp - 273) + " °C";
+
+      let icon = data.weather[0].icon;
+      let iconurl = "https://openweathermap.org/img/wn/" + icon + ".png";
+      document.getElementById("img").src = iconurl;
+    } catch (err) {
+      console.error("Error Fetching Forecast:", err);
+    }
+  };
+
+  // ------------------- HOURLY FORECAST -------------------
+  const hourForecast = (forecast) => {
+    const container = document.querySelector(".templist");
+    container.innerHTML = "";
+
+    for (let i = 0; i < 5; i++) {
+      const list = forecast.list[i];
+
+      let date = new Date(list.dt * 1000);
+
+      let hour = document.createElement("div");
+      hour.classList.add("next");
+
+      let div = document.createElement("div");
+
+      let time = document.createElement("p");
+      time.classList.add("time");
+      time.innerHTML = date
+        .toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })
+        .replace(":00", "");
+
+      let temp = document.createElement("p");
+      temp.innerText =
+        Math.floor(list.main.temp_max - 273) +
+        "°C / " +
+        Math.floor(list.main.temp_min - 273) +
+        "°C";
+
+      div.appendChild(time);
+      div.appendChild(temp);
+
+      let desc = document.createElement("p");
+      desc.classList.add("desc");
+      desc.innerText = list.weather[0].description;
+
+      hour.appendChild(div);
+      hour.appendChild(desc);
+
+      container.appendChild(hour);
+    }
+  };
+
+  // ------------------- DAILY FORECAST -------------------
+  const dayForecast = (forecast) => {
+    const container = document.querySelector(".weekF");
+    container.innerHTML = "";
+
+    for (let i = 8; i < forecast.list.length; i += 8) {
+      const list = forecast.list[i];
+
+      let div = document.createElement("div");
+      div.classList.add("day");
+
+      let date = document.createElement("p");
+      date.classList.add("date");
+      date.innerText = new Date(list.dt * 1000).toDateString();
+
+      let temp = document.createElement("p");
+      temp.innerText =
+        Math.floor(list.main.temp_max - 273) +
+        "°C / " +
+        Math.floor(list.main.temp_min - 273) +
+        "°C";
+
+      let desc = document.createElement("p");
+      desc.classList.add("desc");
+      desc.innerText = list.weather[0].description;
+
+      div.appendChild(date);
+      div.appendChild(temp);
+      div.appendChild(desc);
+
+      container.appendChild(div);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      <div className="header">
+        <h1>WEATHER Monitoring Dashboard</h1>
+        <div>
+          <input
+            type="text"
+            id="input"
+            placeholder="Enter city name"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          />
+          <button id="search" onClick={searchByCity}>
+            Search
+          </button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      <main>
+        <div className="weather">
+          <h2 id="city">Delhi, IN</h2>
+
+          <div className="temp-box">
+            <p id="temperature">26 °C</p>
+          </div>
+
+          <img id="img" alt="Weather icon" />
+        </div>
+
+        <div className="divider"></div>
+
+        <div className="forecast">
+          <p className="cast-header">Upcoming forecast</p>
+          <div className="forecast-list templist"></div>
         </div>
       </main>
+
+      <div className="divider-2"></div>
+
+      <div className="forecast-2">
+        <p className="cast-header">Next 4 days forecast</p>
+        <div className="forecast-list-2 weekF"></div>
+      </div>
     </div>
   );
-}
+};
+
+export default Weather;
