@@ -31,4 +31,20 @@ const weather = ()=>{
             console.error("Error Fetching Weather Data" , err)
         }
     }
+
+    const searchByCity = async()=>{
+        try{
+            const urlsearch = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apikey}`;
+            const respone = await axios.get(urlsearch)
+            const data = respone.data
+            console.log(data)
+            weatherReport(data)
+        }
+        catch(err){
+            console.error("Error Fetching Weather Data:",err)
+        }
+        setCity('')
+    }
+
+    
 }
